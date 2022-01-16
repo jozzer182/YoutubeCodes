@@ -1,0 +1,39 @@
+//---------------------TERMINAL------------------------------
+npm init
+npm install alasql
+node test
+
+//-----------------------package.json---------------------
+{
+  "name": "v004",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "alasql": "^1.7.3"
+  }
+}
+
+
+//----------------test.js------------------------
+import alasql from "alasql";
+
+const inputArray2 = [ 
+  { cod: "111111", descripcion: "material", proy: "a", ctd: -5 },
+  { cod: "111111", descripcion: "material", proy: "a", ctd: 10 },
+  { cod: "111111", descripcion: "material", proy: "b", ctd: -10 },
+  { cod: "111111", descripcion: "material", proy: "b", ctd: 20 },
+  { cod: "111112", descripcion: "equipo", proy: "a", ctd: 25 },
+  { cod: "111112", descripcion: "equipo", proy: "a", ctd: 30 },
+  { cod: "111112", descripcion: "equipo", proy: "b", ctd: 35 },
+  { cod: "111112", descripcion: "equipo", proy: "b", ctd: 40 }
+];
+
+var res= alasql('SELECT proy, cod, SUM(ctd) AS ctd FROM ? GROUP BY proy, cod',[inputArray2])
+console.log(res)
