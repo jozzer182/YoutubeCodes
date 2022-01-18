@@ -1,0 +1,7 @@
+'//-----------VBA CODE-----------------------//
+
+Sub DeleteConnections()
+For i = 1 To 10
+ActiveWorkbook.Connections.Item(1).Delete
+Next i
+End Sub
