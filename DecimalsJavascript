@@ -1,0 +1,18 @@
+//Problem
+var m = 2.2 - 1.5
+console.log("m: "+m)
+
+//Simple
+var n = Number((2.2 - 1.5).toFixed(1))
+console.log("n: "+n)
+
+//For Variables
+var k = 2.2
+//function from stackoverflow
+var countDecimals = function(value) {
+  if (Math.floor(value) !== value)
+      return value.toString().split(".")[1].length || 0;
+  return 0;
+}
+var o = Number((k - 1.5).toFixed(countDecimals(k)))
+console.log("o: "+o)
