@@ -1,0 +1,11 @@
+//---Para los usuarios en Español: recomiendo colocar su navegador en inglés, para tener compatibilidad con la puntuación de las funciones, ya que en español PowerApps usa ";" 
+//---mientras que en inglés se usa ",", ademas de facilitar la búsqueda de elementos en PowerAutomate.
+//----------Image------
+Last(Att.Attachments).Value
+//---------Attatchment---OnAddFile-----------
+Set(varDemo,JSON(Image1.Image,JSONFormat.IncludeBinaryData));
+Set(varBase,Mid(varDemo,Find(",",varDemo)+1,Len(varDemo)-Find(",",varDemo)-1));
+Set(varFile,UploadFile1.Run(varBase,Last(Att.Attachments).Name).sharepointfilelink);
+Reset(Att)
+//--------Create File --> File Content ---- Power Automate-----
+base64ToBinary()
