@@ -1,0 +1,67 @@
+//-------------App.js-------------------
+
+import './App.css';
+
+function App() {
+  function guardarArchivo(e) {
+    var file = e.target.files[0] //the file
+    var reader = new FileReader() //this for convert to Base64 
+    reader.readAsDataURL(e.target.files[0]) //start conversion...
+    reader.onload = function (e) { //.. once finished..
+      var rawLog = reader.result.split(',')[1]; //extract only thee file data part
+      var dataSend = { dataReq: { data: rawLog, name: file.name, type: file.type }, fname: "uploadFilesToGoogleDrive" }; //preapre info to send to API
+      fetch('https://script.google.com/macros/s/AKfycbwcLqrESmi7j6BKp9ARYUt682wwkOZC8EJC7LpVuQLgRWdaoQw/exec', //your AppsScript URL
+        { method: "POST", body: JSON.stringify(dataSend) }) //send to Api
+        .then(res => res.json()).then((a) => {
+          console.log(a) //See response
+        }).catch(e => console.log(e)) // Or Error in console
+    }
+  }
+
+  return (
+    <div className="App">
+      <div className="App-header">
+        <input type="file" accept="application/pdf" id="customFile" onChange={(e) => guardarArchivo(e)} />
+      </div>
+    </div>
+  );
+}
+
+export default App;
+//--------------------------------------------------
+
+
+//Appsscript: https://script.google.com/home
+//----------code.gs----------
+
+function doPost(request = {}) {
+  const { parameter, postData: { contents, type } = {} } = request;
+  const { dataReq = {} } = JSON.parse(contents); //content
+  const { fname = {} } = JSON.parse(contents); //function name
+
+  const response = {
+    status: "function not found: " + fname, // prepare response in function not found
+    data2: dataReq
+  }
+  switch (fname) { //function selection
+    case 'uploadFilesToGoogleDrive':
+      var output = JSON.stringify(uploadFilesToGoogleDrive(dataReq.data, dataReq.name, dataReq.type)) //call function with data, name and type from request
+      break
+    default:
+      var output = JSON.stringify(response)
+      break
+  }
+  return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON); //response to frontend
+}
+
+function uploadFilesToGoogleDrive(data, name, type) {
+  var datafile = Utilities.base64Decode(data)  // convert to Binary (from Base4) Utilities is native from AppsScript
+  var blob = Utilities.newBlob(datafile, type, name); // structure the file
+  var folder = DriveApp.getFolderById("14r2mWAfJzPlbf1ATwNCR_wbeYyh5uDpV"); //select folder to save
+  var newFile = folder.createFile(blob); // create and save
+  newFile.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.EDIT); // set permision to anyone to view
+  var url = newFile.getUrl() //get the file URL to share
+  var id = newFile.getId()
+  let obj = { url, id } //prepare object to response
+  return obj
+}
