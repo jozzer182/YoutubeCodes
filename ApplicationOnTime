@@ -1,0 +1,26 @@
+'VBA SCRIPT
+Sub XScript()
+'for display status
+Sheets("a").Cells(2, 2).Value = "Ejecuting 'X' Script"
+'Execute here the 'X' Script
+'Next for display time
+Sheets("a").Cells(3, 2).Value = Now
+Sheets("a").Cells(4, 2).Value = Now + TimeValue("00:01:00")
+Sheets("a").Cells(2, 2).Value = "Will Execute 'Y' Script"
+'next for Execute Timer
+alertTime = Now + TimeValue("00:01:00") 'Timer
+Application.OnTime alertTime, "YScript" 'Trigger
+End Sub
+
+Sub YScript()
+'for display status
+Sheets("a").Cells(2, 2).Value = "Ejecuting 'Y' Script"
+'Execute here the 'X' Script
+'Next for display time
+Sheets("a").Cells(3, 2).Value = Now
+Sheets("a").Cells(4, 2).Value = Now + TimeValue("00:01:00")
+Sheets("a").Cells(2, 2).Value = "Will Execute 'X' Script"
+'next for Execute Timer
+alertTime = Now + TimeValue("00:01:00") 'Timer
+Application.OnTime alertTime, "XScript" 'Trigger
+End Sub
