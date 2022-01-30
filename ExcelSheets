@@ -1,0 +1,79 @@
+'//---MACRO---
+Sub ConnectSheets()
+
+    Dim myurl As String 'for store URL from google
+    Set xmlhttp = CreateObject("MSXML2.ServerXMLHTTP.6.0") 'To use POST http Request
+    Dim VbaArray() As String 'To store data row by row
+    Dim tbl As ListObject 'To call Table from Excel file
+    Set tbl = Sheets("Page1").ListObjects("Table1") 'Call Table
+    Dim dict As New Scripting.Dictionary 'To use Objects like Javascript
+    Dim dataTable As String 'For store all of json results
+    
+    For x = 1 To tbl.ListColumns(1).DataBodyRange.Count 'To go for every row
+        For y = 1 To tbl.ListColumns.Count 'To go for ever column
+            Valor = tbl.DataBodyRange(x, y).Value 'get value
+            Valor = Replace(Valor, Space(2), Space(1)) 'If is number, add quotes on JsonConverter
+'            Debug.Print Valor
+            dict.Add tbl.HeaderRowRange(y).Value, Valor 'Like Javascript Key:Value
+        Next y
+        ReDim Preserve VbaArray(x - 1) 'Make bigger the Array for asign a new value
+        VbaArray(x - 1) = JsonConverter.ConvertToJson(dict) 'Use JsonConverter
+'        Debug.Print VbaArray(x - 1)
+        Set dict = Nothing 'Clear dict for next loop
+    Next x
+    
+    dataTable = Join(VbaArray, ", " & vbNewLine) 'To add a , and a new line
+'    Debug.Print dataTable
+    'Create All Json to Send
+    Data = "{""dataReq"":[" & vbNewLine & dataTable & vbNewLine & "], " & vbNewLine & "  ""fname"":""pasteData""}"
+'    Debug.Print Data
+
+    'Define the google URL
+    myurl = "https://script.google.com/macros/s/AKfycbzy5qVE5sQYwv4Caas207cgrFKixJtELofj2Tj9vPLKDEQzIxg/exec"
+    xmlhttp.Open "POST", myurl, False
+    xmlhttp.Send Data
+    sGetResult = xmlhttp.ResponseText
+    Debug.Print sGetResult
+    Set Data = Nothing
+
+End Sub
+
+//----Apps Script Code
+function doPost(request = {}) {
+  const { parameter, postData: { contents, type } = {} } = request; //request data
+  const { dataReq = {} } = JSON.parse(contents); //content
+  const { fname = {} } = JSON.parse(contents); //function name
+
+  const response = {
+    status: "function not found: " + fname, // prepare response in function not found
+    data2: dataReq
+  }
+  switch (fname) { //function selection
+    case 'pasteData':
+      var output = JSON.stringify(pasteDAta(dataReq)) //call function with data from request
+      break
+    default:
+      var output = JSON.stringify(response)
+      break
+  }
+  return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON); //response to frontend
+}
+
+function pasteDAta(dataReq) {
+  const id = '1wtGM5QL0LwIYJoU9joOO31n_kBbJJJHRFaKtIdwWOeU'; //id of Google Sheet
+  var sheet = SpreadsheetApp.openById(id).getSheetByName('Page1'); //sheet
+  var headings = sheet.getDataRange().getValues()[0]; //Headers
+  var i = 0 //to test the times that efectively adds rows the forEach function
+
+  dataReq.forEach((a) => { //go trought every item on dataReq as 'a'
+    let holder = []; //to steore temp the elements
+    for (x in headings) { //to add in order of Headers on sheet
+      let output = (headings[x] in a) ? a[headings[x]] : ''; //if exist add, if not empty
+      holder.push(output); //add to holder
+    }
+    sheet.appendRow(holder); //put holder(order data) on sheet
+    i += 1 //to test the times
+  });
+
+  return "Numbers of sheets added: "+i;
+}
