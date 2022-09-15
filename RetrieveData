@@ -1,0 +1,95 @@
+//VBA-MACRO CODE ----------------------------------------------------------------------------------------------------
+
+Sub Retrieve()
+  Dim myurl As String 'for store URL from google
+  Set xmlhttp = CreateObject("MSXML2.ServerXMLHTTP.6.0") 'To use POST http Request
+  Data = "{""dataReq"":[], " & vbNewLine & "  ""fname"":""getData""}"
+
+  'Define the google URL
+  myurl = "https://script.google.com/macros/s/AKfycbzg7pgU8H4J8rLwWSXnKZ9SBPozGpr-HvfVkHyX1qFi4MBUwzKu/exec"
+  xmlhttp.Open "POST", myurl, False
+  xmlhttp.send Data
+  sGetResult = xmlhttp.ResponseText
+  Set JsonObject = JsonConverter.ParseJson(sGetResult)
+
+  Row = 0
+  For Each dataRow In JsonObject
+      Row = Row + 1
+      Column = 0
+      For Each dataCell In dataRow
+          Column = Column + 1
+          Cells(Row, Column) = dataCell
+      Next
+  Next
+  
+End Sub
+
+//GOOGLE APPS SCRIPT CODE ------------------------------------------------------------------------------------------
+
+function doPost(request = {}) {
+  const { parameter, postData: { contents, type } = {} } = request; //request data
+  const { dataReq = {} } = JSON.parse(contents); //content
+  const { fname = {} } = JSON.parse(contents); //function name
+
+  const response = {
+    status: "function not found: " + fname, // prepare response in function not found
+    data2: dataReq
+  }
+  switch (fname) { //function selection
+    case 'pasteData':
+      var output = JSON.stringify(pasteDAta(dataReq)) //call function with data from request
+      break
+    case 'deleteData':
+      var output = JSON.stringify(deleteData()) //call function to delete Data
+      break
+    case 'getData':
+      var output = JSON.stringify(getData()) //call function to obtain Data
+      break
+    default:
+      var output = JSON.stringify(response)
+      break
+  }
+  return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON); //response to frontend
+}
+
+
+function getData(){
+  const id = '197QDHOj6eQNenFYH-mneGmZmFQ7bRKrgO8a56XLyJhE'; //id of Google Sheet
+  const page = 'Page1'
+  const data = SpreadsheetApp.openById(id)
+    .getSheetByName(page)
+    .getDataRange()
+    .getValues();
+  return data;
+}
+
+function deleteData(){
+  const id = '197QDHOj6eQNenFYH-mneGmZmFQ7bRKrgO8a56XLyJhE'; //id of Google Sheet
+  var sheet = SpreadsheetApp.openById(id).getSheetByName('Page1'); //sheet
+  var lastRow = sheet.getLastRow();
+  if (lastRow == 1) {
+    lastRow = 2
+  }
+  //DeleteAllData
+  sheet.getRange(2 + ':' + lastRow).clearContent()
+}
+
+
+function pasteDAta(dataReq) {
+  const id = '197QDHOj6eQNenFYH-mneGmZmFQ7bRKrgO8a56XLyJhE'; //id of Google Sheet
+  var sheet = SpreadsheetApp.openById(id).getSheetByName('Page1'); //sheet
+  var headings = sheet.getDataRange().getValues()[0]; //Headers
+  var i = 0 //to test the times that efectively adds rows the forEach function
+
+  dataReq.forEach((a) => { //go trought every item on dataReq as 'a'
+    let holder = []; //to steore temp the elements
+    for (x in headings) { //to add in order of Headers on sheet
+      let output = (headings[x] in a) ? a[headings[x]] : ''; //if exist add, if not empty
+      holder.push(output); //add to holder
+    }
+    sheet.appendRow(holder); //put holder(order data) on sheet
+    i += 1 //to test the times
+  });
+
+  return "Numbers of sheets added: "+i;
+}
