@@ -1,0 +1,46 @@
+// VBA-MACRO CODE
+Sub ConnectSheets()
+    Set xmlhttp = CreateObject("MSXML2.ServerXMLHTTP.6.0") 'To use POST http Request
+    'Get data table as JSON
+    tableData = JsonConverter.ConvertToJson(Sheets("Page1").ListObjects("Table1").Range.Value)
+    '    'Create All Json to Send
+    Data = "{""dataReq"": " & vbNewLine & tableData & vbNewLine & ", " & vbNewLine & "  ""fname"":""pasteData""}"
+        Debug.Print Data
+    'Define the google URL
+    myurl = "https://script.google.com/macros/s/AKfycbzE0nm-Jz2yE4IWc7OB_ter8NrNKBL9SXuxi6cG74FeUpwCx6T9tFZyPd13dRxgaqEm/exec"
+    xmlhttp.Open "POST", myurl, False   'define method to use
+    xmlhttp.Send Data                   'execute call
+    sGetResult = xmlhttp.ResponseText   'read response
+    Debug.Print sGetResult              'view response
+
+End Sub
+
+//GOOGLE APPS SCRIPT CODE
+function doPost(request = {}) {
+  const { parameter, postData: { contents, type } = {} } = request; //request data
+  const { dataReq = {} } = JSON.parse(contents); //content
+  const { fname = {} } = JSON.parse(contents); //function name
+
+  const response = {
+    status: "function not found: " + fname, // prepare response in function not found
+    data2: dataReq
+  }
+  switch (fname) { //function selection
+    case 'pasteData':
+      var output = JSON.stringify(pasteData(dataReq)) //call function with data, name and type from request
+      break
+    default:
+      var output = JSON.stringify(response)
+      break
+  }
+  return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON); //response to frontend
+}
+
+function pasteData(dataReq) {
+  const id = '1wtGM5QL0LwIYJoU9joOO31n_kBbJJJHRFaKtIdwWOeU'; //id of Google Sheet
+  var sheet = SpreadsheetApp.openById(id).getSheetByName('Page1'); //sheet
+  sheet.clear(); //delete data
+  sheet.getRange(1, 1, dataReq.length, dataReq[0].length).setValues(dataReq); // paste new data
+
+  return "Numbers of sheets added: "+ dataReq.length; //return a response
+}
