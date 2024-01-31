@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "dominios": {
+    	".read": true,
+    	".write": "auth.token.email_verified === true",
+    },
+    "mensaje": {
+    	".read": "auth.token.email_verified === true",
+    	".write": "auth.token.email_verified === true",
+    },
+    "perfiles":{
+    	".read": "auth.token.email !== '' && auth !== null",
+    	".write": "auth.token.email !== '' && auth !== null",
+    },
+    "permisos":{
+    	".read": "auth.token.email !== '' && auth !== null",
+    	".write": "auth.token.email !== '' && auth !== null",
+    }
+  }
+}
